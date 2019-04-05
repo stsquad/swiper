@@ -5187,6 +5187,9 @@ list is passed to `compilation-environment'."
   :type '(repeat (string :tag "ENVVARNAME=VALUE"))
   :options '(("LANG=C")))
 
+(defvar counsel-compile-env-history nil
+  "History for `counsel-compile-env'.")
+
 (defcustom counsel-compile-make-pattern "\\`\\(?:GNUm\\|[Mm]\\)akefile\\'"
   "Regexp for matching the names of Makefiles."
   :type 'regexp)
@@ -5368,6 +5371,26 @@ specified by the `blddir' property."
             (counsel--get-compile-candidates dir)
             :action #'counsel-compile--action
             :caller 'counsel-compile))
+
+;;;###autoload
+(defun counsel-compile-env ()
+  "Update `counsel-compile-env' interactively."
+  (interactive)
+  (ivy-read "Compile environment variable: " (nconc
+                                              counsel-compile-env counsel-compile-env-history)
+            :action (lambda (var)
+                      (add-to-list 'counsel-compile-env var))
+            :history 'counsel-compile-env-history
+            :caller 'counsel-compile-env))
+
+(ivy-set-actions
+ 'counsel-compile-env
+ '(("d"
+    (lambda(var)
+      (setq counsel-compile-env
+            (remove var counsel-compile-env)))
+    "remove from environment")))
+
 
 ;;* `counsel-mode'
 (defvar counsel-mode-map
