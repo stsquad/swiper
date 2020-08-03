@@ -6251,10 +6251,10 @@ and should return either a directory, or nil if no root was
 found.")
 
 (defun counsel--compile-root ()
-  "Return root of current project or signal an error on failure.
+  "Return root of current project or default-directory.
 The root is determined by `counsel-compile-root-functions'."
   (or (run-hook-with-args-until-success 'counsel-compile-root-functions)
-      (error "Couldn't find project root")))
+      default-directory))
 
 (defun counsel--projectile-root ()
   "Return root of current projectile project or nil on failure.
@@ -6573,9 +6573,7 @@ Additional actions:
 
 \\{counsel-compile-map}"
   (interactive)
-  (setq counsel-compile--current-build-dir (or dir
-                                               (counsel--compile-root)
-                                               default-directory))
+  (setq counsel-compile--current-build-dir (or dir (counsel--compile-root)))
   (ivy-read "Compile command: "
             (delete-dups (counsel--get-compile-candidates dir))
             :action #'counsel-compile--action
