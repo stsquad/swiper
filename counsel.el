@@ -6244,7 +6244,8 @@ This variable is suitable for addition to
     counsel--project-current
     counsel--configure-root
     counsel--git-root
-    counsel--dir-locals-root)
+    counsel--dir-locals-root
+    counsel--single-file-root)
   "Special hook to find the project root for compile commands.
 Each function on this hook is called in turn with no arguments
 and should return either a directory, or nil if no root was
@@ -6282,6 +6283,19 @@ Use the presence of a \".git\" file to determine the root."
   "Return root of current project or nil on failure.
 Use the presence of a `dir-locals-file' to determine the root."
   (counsel--dominating-file dir-locals-file))
+
+(defun counsel--single-file-root ()
+  "Return the root of a single standalone file.
+
+To avoid catching un-related history for this one file we locally
+override `counsel-compile-history' and leave the user to fill in their
+preferred build stanza.
+
+This should be the last function in `counsel-compile-root-functions'
+after giving all the other project root finders a chance."
+  (unless (local-variable-p 'counsel-compile-history)
+    (setq-local counsel-compile-history '()))
+  (file-name-directory (buffer-file-name)))
 
 (defvar counsel-compile-local-builds
   '(counsel-compile-get-filtered-history
@@ -6573,9 +6587,7 @@ Additional actions:
 
 \\{counsel-compile-map}"
   (interactive)
-  (setq counsel-compile--current-build-dir (or dir
-                                               (counsel--compile-root)
-                                               default-directory))
+  (setq counsel-compile--current-build-dir (or dir (counsel--compile-root)))
   (ivy-read "Compile command: "
             (delete-dups (counsel--get-compile-candidates dir))
             :action #'counsel-compile--action
